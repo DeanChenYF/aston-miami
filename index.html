@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ASTON 新球衣登記表</title>
+<style>
+:root{--bg:#0D0D11;--panel:#15151C;--edge:#24242E;--ink:#F2F0EA;--dim:#8D8C96;--pink:#F0439B;--teal:#22C3C8;--warn:#FFB020;--err:#FF5C5C;--ok:#4CD98A}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Helvetica Neue','PingFang TC','Microsoft JhengHei',sans-serif;padding-bottom:80px}
+header{padding:34px 20px 24px;text-align:center;border-bottom:1px solid var(--edge);background:radial-gradient(120% 90% at 50% 110%,rgba(240,67,155,.18) 0%,transparent 55%)}
+.eyebrow{letter-spacing:6px;font-size:11px;color:var(--teal);font-weight:700}
+h1{margin:8px 0 4px;font-size:30px;font-weight:900;font-style:italic;letter-spacing:1px;background:linear-gradient(90deg,var(--teal),#fff 55%,var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sub{color:var(--dim);font-size:13px}
+main{max-width:760px;margin:0 auto;padding:22px 16px 0}
+.card{background:var(--panel);border:1px solid var(--edge);border-radius:16px;padding:18px;margin-bottom:18px}
+.sec{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px}
+.sec b{font-size:16px}.sec .no{color:var(--pink);font-style:italic;margin-right:8px}.sec .note{font-size:12px;color:var(--dim)}
+label{display:block}
+.lb{font-size:12px;color:var(--dim);margin-bottom:6px}
+input,select{width:100%;padding:10px 12px;font-size:15px;background:#0B0B10;color:var(--ink);border-radius:9px;border:1px solid #2b2b36;outline:none}
+input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 0 2px rgba(34,195,200,.2)}
+::placeholder{color:#55545e}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.item{border:1px solid var(--edge);border-radius:12px;padding:14px;margin-bottom:12px;background:#101017;display:flex;gap:14px;flex-wrap:wrap}
+.item.bad{border-color:rgba(255,92,92,.4);background:rgba(255,92,92,.03)}
+.tag{font-size:12px;color:var(--teal);font-weight:700;letter-spacing:2px}
+.hint{font-size:11.5px;margin-top:5px}
+.ghost{background:transparent;border:1px solid rgba(255,92,92,.35);color:var(--err);border-radius:8px;padding:3px 10px;font-size:12px;cursor:pointer}
+.addBtn{width:100%;padding:11px 0;border-radius:10px;cursor:pointer;background:transparent;border:1px dashed rgba(34,195,200,.4);color:var(--teal);font-size:14px;font-weight:700}
+.submit{width:100%;padding:13px 0;border-radius:12px;font-size:16px;font-weight:900;letter-spacing:2px;border:none;cursor:pointer;color:#0D0D11;background:linear-gradient(90deg,var(--teal),var(--pink))}
+.submit:disabled{background:#22222b;color:var(--dim);cursor:not-allowed}
+ul.problems{margin:0 0 12px;padding-left:18px;color:var(--warn);font-size:13px;line-height:1.8}
+.banner{margin-bottom:14px;padding:10px 14px;border-radius:10px;font-size:14px;display:none}
+.banner.ok{display:block;background:rgba(76,217,138,.1);border:1px solid rgba(76,217,138,.35);color:var(--ok)}
+.banner.err{display:block;background:rgba(255,92,92,.1);border:1px solid rgba(255,92,92,.35);color:var(--err)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.chip{padding:4px 10px;border-radius:8px;font-size:13px;font-weight:800;border:1px solid rgba(34,195,200,.4);color:var(--teal);background:#101017}
+.chip.mine{border-color:rgba(240,67,155,.5);color:var(--pink)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{padding:6px 8px;border-bottom:1px solid var(--edge);font-weight:600;color:var(--dim);text-align:left}
+td{padding:8px;border-bottom:1px solid var(--edge);vertical-align:top}
+.small{font-size:12px;color:var(--dim);line-height:1.7;margin-top:10px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="eyebrow">ASTON · SINCE 2010</div>
+  <h1>新球衣登記表</h1>
+  <div class="sub">黑 × 桃紅 × 藍綠｜填寫尺寸・背號・頭圍・件數</div>
+</header>
+<main>
+  <div id="banner" class="banner"></div>
+
+  <section class="card">
+    <div class="sec"><b><span class="no">01</span>基本資料</b><span class="note" id="saveNote"></span></div>
+    <div class="row">
+      <label style="flex:1 1 220px"><div class="lb">姓名(中文,隊內對照用)</div>
+        <input id="displayName" maxlength="20" placeholder="例:陳大明"></label>
+      <label style="flex:0 1 160px"><div class="lb">頭圍 cm(訂球帽用)</div>
+        <input id="head" type="number" min="45" max="70" placeholder="例:58"></label>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="sec"><b><span class="no">02</span>球衣明細</b><span class="note">同一人可買多件、各自指定背號與姓名</span></div>
+    <div id="items"></div>
+    <button class="addBtn" onclick="addItem()">＋ 再加一件(不同背號 / 姓名)</button>
+  </section>
+
+  <section class="card">
+    <div class="sec"><b><span class="no">03</span>送出登記</b><span class="note" id="submitNote">尚未送出</span></div>
+    <ul class="problems" id="problems"></ul>
+    <button class="submit" id="submitBtn" onclick="submitOrder()">送出我的訂單</button>
+    <div class="small">草稿會自動儲存在你這台裝置;按「送出」後,姓名、背號、尺寸等會登記到<b style="color:var(--ink)">全隊共用清單</b>(所有隊友可見)供背號查重與統計。</div>
+  </section>
+
+  <section class="card">
+    <div class="sec"><b><span class="no">04</span>全隊登記狀況</b><span class="note" id="teamNote">載入中…</span></div>
+    <div class="chips" id="chips"></div>
+    <div style="overflow-x:auto"><table id="teamTable" style="display:none">
+      <thead><tr><th>姓名</th><th>背號 / 英文名 / 尺寸 / 件數</th><th>頭圍</th></tr></thead>
+      <tbody id="teamBody"></tbody>
+    </table></div>
+    <div id="teamEmpty" class="small">還沒有人送出。你可以當第一個。</div>
+  </section>
+</main>
+
+<script>
+const SIZES=["XXS","XS","S","M","L","O","XO","XO2","XO3","XO4","XO5"];
+const CHEST={XXS:30,XS:32,S:34,M:36,L:38,O:40,XO:42,XO2:44,XO3:46,XO4:48,XO5:50};
+const uid=()=>Math.random().toString(36).slice(2,10);
+let personId=localStorage.getItem("aston_pid")||(uid()+uid());
+localStorage.setItem("aston_pid",personId);
+let items=[],teamOrders=[],submittedAt=null,draftTimer=null;
+
+// ---------- draft ----------
+try{const d=JSON.parse(localStorage.getItem("aston_draft")||"null");
+  if(d){document.addEventListener("DOMContentLoaded",()=>{
+    el("displayName").value=d.displayName||"";el("head").value=d.head||"";
+    items=(d.items&&d.items.length)?d.items:[newItem()];submittedAt=d.submittedAt||null;render();});
+  }else{items=[newItem()];}
+}catch(e){items=[newItem()];}
+
+function el(id){return document.getElementById(id)}
+function newItem(){return{id:uid(),engName:"",number:"",size:"M",qty:1}}
+function addItem(){items.push(newItem());render();saveDraft()}
+function rmItem(id){items=items.filter(x=>x.id!==id);render();saveDraft()}
+function setItem(id,k,v){const it=items.find(x=>x.id===id);if(it){it[k]=v;render();saveDraft()}}
+
+function saveDraft(){
+  el("saveNote").textContent="儲存中…";clearTimeout(draftTimer);
+  draftTimer=setTimeout(()=>{
+    localStorage.setItem("aston_draft",JSON.stringify({
+      displayName:el("displayName").value,head:el("head").value,items,submittedAt}));
+    el("saveNote").textContent="已自動儲存 ✓";
+  },600);
+}
+document.addEventListener("input",e=>{if(e.target.id==="displayName"||e.target.id==="head"){saveDraft();renderProblems()}});
+
+// ---------- team data ----------
+function loadTeam(){
+  google.script.run.withSuccessHandler(s=>{
+    teamOrders=JSON.parse(s);renderTeam();render();
+  }).getOrders();
+}
+setInterval(loadTeam,20000); // 每20秒同步一次,他人剛登記的背號也會示警
+document.addEventListener("DOMContentLoaded",loadTeam);
+
+function takenByOthers(){
+  const m={};teamOrders.forEach(o=>{if(o.personId!==personId)(o.items||[]).forEach(it=>m[String(it.number)]=o.displayName)});return m;
+}
+function myDupes(){
+  const seen={},d=new Set();
+  items.forEach(it=>{const n=String(it.number);if(it.number==="")return;
+    if(seen[n]){d.add(it.id);d.add(seen[n])}else seen[n]=it.id});return d;
+}
+const nameBad=s=>s!==""&&!/^[A-Z][A-Z .'-]*$/.test(s);
+
+// ---------- validation ----------
+function problems(){
+  const p=[],taken=takenByOthers(),dupes=myDupes();
+  if(!el("displayName").value.trim())p.push("請填寫姓名(供隊內對照)");
+  const h=Number(el("head").value);
+  if(!h||h<45||h>70)p.push("請填寫頭圍(45–70 cm,訂帽用)");
+  items.forEach((it,i)=>{const t="第 "+(i+1)+" 件";
+    if(it.number==="")p.push(t+":請填背號 (0–99)");
+    else if(taken[String(it.number)]!==undefined)p.push(t+":背號 "+it.number+" 已被「"+taken[String(it.number)]+"」使用");
+    if(dupes.has(it.id))p.push(t+":與自己另一件背號重複");
+    if(!it.engName.trim())p.push(t+":請填背後英文姓名");
+    else if(nameBad(it.engName))p.push(t+":姓名限大寫英文字母(可含空格、-、'、.)");
+    if(!it.qty||it.qty<1)p.push(t+":件數至少 1");
+  });
+  return p;
+}
+
+// ---------- render ----------
+function jerseySVG(name,num,bad){
+  name=(name||"NAME").slice(0,12);num=String(num===""?"00":num).slice(0,2);
+  let beams="";[46,58,70,82,94,104].forEach((x,i)=>{beams+='<rect x="'+x+'" y="'+(70-i*4)+'" width="'+(i%2?2:3.5)+'" height="100" fill="url(#beam)"/>'});
+  return '<svg viewBox="0 0 150 170" width="150" height="170" style="flex:0 0 150px;align-self:center">'
+  +'<defs><linearGradient id="beam" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#F0439B" stop-opacity="0.75"/><stop offset="1" stop-color="#F0439B" stop-opacity="0"/></linearGradient>'
+  +'<clipPath id="jb'+num+name.length+'"><path d="M30,28 L55,14 L95,14 L120,28 L138,46 L126,60 L118,52 L118,150 Q118,156 112,156 L38,156 Q32,156 32,150 L32,52 L24,60 L12,46 Z"/></clipPath></defs>'
+  +'<path d="M30,28 L55,14 L95,14 L120,28 L138,46 L126,60 L118,52 L118,150 Q118,156 112,156 L38,156 Q32,156 32,150 L32,52 L24,60 L12,46 Z" fill="#111116" stroke="'+(bad?"#FF5C5C":"#2b2b36")+'" stroke-width="1.5"/>'
+  +'<g clip-path="url(#jb'+num+name.length+')">'+beams+'</g>'
+  +'<path d="M55,14 Q75,26 95,14" fill="none" stroke="#F0439B" stroke-width="3"/>'
+  +'<text x="75" y="52" text-anchor="middle" style="font:italic 800 13px Georgia,serif;fill:#22C3C8;letter-spacing:1px" stroke="#F0439B" stroke-width="0.4">'+name+'</text>'
+  +'<text x="75" y="122" text-anchor="middle" style="font:italic 900 58px Arial Black,Arial,sans-serif;fill:#22C3C8" stroke="#F0439B" stroke-width="2.2" paint-order="stroke">'+num+'</text>'
+  +(bad?'<text x="75" y="166" text-anchor="middle" style="font:700 10px sans-serif;fill:#FF5C5C">背號衝突</text>':'')+'</svg>';
+}
+
+function render(){
+  const taken=takenByOthers(),dupes=myDupes();
+  el("items").innerHTML=items.map((it,idx)=>{
+    const conflict=it.number!==""&&taken[String(it.number)]!==undefined;
+    const selfDupe=dupes.has(it.id),nb=nameBad(it.engName);
+    return '<div class="item'+(conflict||selfDupe?' bad':'')+'">'
+    +'<div style="flex:1 1 300px;min-width:260px">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span class="tag">JERSEY '+(idx+1)+'</span>'
+    +(items.length>1?'<button class="ghost" onclick="rmItem(\''+it.id+'\')">移除</button>':'')+'</div>'
+    +'<div class="row">'
+    +'<label style="flex:1 1 170px"><div class="lb">背後英文姓名(大寫)</div>'
+    +'<input value="'+it.engName+'" maxlength="16" placeholder="例:CHEN" style="'+(nb?'border-color:#FF5C5C':'')+'" oninput="setItem(\''+it.id+'\',\'engName\',this.value.toUpperCase())">'
+    +(nb?'<div class="hint" style="color:#FF5C5C">限大寫英文(可含空格、-、\'、.)</div>':'')+'</label>'
+    +'<label style="flex:0 1 110px"><div class="lb">背號 0–99</div>'
+    +'<input value="'+it.number+'" type="number" min="0" max="99" placeholder="32" style="'+((conflict||selfDupe)?'border-color:#FF5C5C':'')+'" oninput="if(this.value===\'\'||(/^\\d{1,2}$/.test(this.value)&&+this.value<=99))setItem(\''+it.id+'\',\'number\',this.value);else this.value=\''+it.number+'\'">'
+    +(conflict?'<div class="hint" style="color:#FF5C5C">⚠ 已被「'+taken[String(it.number)]+'」使用</div>':(selfDupe?'<div class="hint" style="color:#FFB020">⚠ 與自己另一件重複</div>':''))+'</label>'
+    +'<label style="flex:0 1 110px"><div class="lb">尺寸</div>'
+    +'<select onchange="setItem(\''+it.id+'\',\'size\',this.value)">'+SIZES.map(s=>'<option'+(s===it.size?' selected':'')+'>'+s+'</option>').join('')+'</select>'
+    +'<div class="hint" style="color:var(--dim)">適合胸圍 '+CHEST[it.size]+'"</div></label>'
+    +'<label style="flex:0 1 90px"><div class="lb">件數</div>'
+    +'<input type="number" min="1" max="9" value="'+it.qty+'" oninput="setItem(\''+it.id+'\',\'qty\',Math.max(1,Math.min(9,+this.value||1)))"></label>'
+    +'</div></div>'+jerseySVG(it.engName,it.number,conflict||selfDupe)+'</div>';
+  }).join('');
+  renderProblems();
+}
+function renderProblems(){
+  const p=problems();
+  el("problems").innerHTML=p.map(x=>'<li>'+x+'</li>').join('');
+  el("submitBtn").disabled=p.length>0;
+  el("submitBtn").textContent=submittedAt?"更新我的訂單":"送出我的訂單";
+  el("submitNote").textContent=submittedAt?("上次送出:"+new Date(submittedAt).toLocaleString()):"尚未送出";
+}
+function renderTeam(){
+  const total=teamOrders.reduce((s,o)=>s+(o.items||[]).reduce((a,b)=>a+(+b.qty||0),0),0);
+  el("teamNote").textContent=teamOrders.length+" 人已填 · 共 "+total+" 件";
+  const chips=teamOrders.flatMap(o=>(o.items||[]).map(it=>({n:it.number,mine:o.personId===personId})))
+    .sort((a,b)=>a.n-b.n).map(x=>'<span class="chip'+(x.mine?' mine':'')+'">#'+x.n+'</span>').join('');
+  el("chips").innerHTML=chips;
+  if(teamOrders.length){
+    el("teamEmpty").style.display="none";el("teamTable").style.display="table";
+    el("teamBody").innerHTML=[...teamOrders].sort((a,b)=>a.updatedAt<b.updatedAt?1:-1).map(o=>
+      '<tr><td style="white-space:nowrap">'+o.displayName+(o.personId===personId?'<span style="color:var(--pink)">(我)</span>':'')+'</td>'
+      +'<td style="line-height:1.9">'+(o.items||[]).map(it=>'<div><b style="color:var(--teal)">#'+it.number+'</b> '+it.engName+'<span style="color:var(--dim)"> · '+it.size+' · '+it.qty+' 件</span></div>').join('')+'</td>'
+      +'<td style="color:var(--dim)">'+o.head+' cm</td></tr>').join('');
+  }else{el("teamEmpty").style.display="block";el("teamTable").style.display="none"}
+}
+
+// ---------- submit ----------
+function banner(kind,text){const b=el("banner");b.className="banner "+kind;b.textContent=text;setTimeout(()=>b.className="banner",4000)}
+function submitOrder(){
+  if(problems().length)return;
+  const btn=el("submitBtn");btn.disabled=true;btn.textContent="送出中…";
+  const payload=JSON.stringify({personId,displayName:el("displayName").value.trim(),head:Number(el("head").value),
+    items:items.map(it=>({engName:it.engName.trim(),number:String(it.number),size:it.size,qty:Number(it.qty)}))});
+  google.script.run.withSuccessHandler(s=>{
+    const r=JSON.parse(s);
+    if(r.ok){submittedAt=new Date().toISOString();banner("ok","已送出!你的背號已登記,隊友將看到即時查重");saveDraft();loadTeam()}
+    else{banner("err",r.msg||"送出失敗");loadTeam()}
+    renderProblems();
+  }).withFailureHandler(()=>{banner("err","連線失敗,請再試一次");renderProblems()}).submitOrder(payload);
+}
+render();
+</script>
+</body>
+</html>
