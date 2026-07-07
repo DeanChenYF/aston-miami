@@ -4,6 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ASTON 新球衣登記表</title>
+<meta name="description" content="ASTON 慢壘隊新球衣登記：填寫尺寸、背號、頭圍與件數，即時背號查重與費用試算。">
+<meta name="theme-color" content="#0D0D11">
+<meta property="og:type" content="website">
+<meta property="og:title" content="ASTON 新球衣登記表">
+<meta property="og:description" content="填寫尺寸・背號・頭圍・件數｜即時背號查重與費用試算">
+<meta property="og:url" content="https://deanchenyf.github.io/aston-miami/">
+<meta property="og:image" content="https://deanchenyf.github.io/aston-miami/jersey.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>
 :root{--bg:#0D0D11;--panel:#15151C;--edge:#24242E;--ink:#F2F0EA;--dim:#8D8C96;--pink:#F0439B;--teal:#22C3C8;--warn:#FFB020;--err:#FF5C5C;--ok:#4CD98A}
 *{box-sizing:border-box}
@@ -100,7 +110,7 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--pink);cursor:poin
     <div class="price" id="priceBox"></div>
     <ul class="problems" id="problems"></ul>
     <button class="submit" id="submitBtn" onclick="submitOrder()">送出我的訂單</button>
-    <div class="small">草稿會自動儲存在你這台裝置;按「送出」後,姓名、背號、尺寸等會登記到<b style="color:var(--ink)">全隊共用清單</b>(所有隊友可見)供背號查重與統計。<b style="color:var(--ink)">要修改</b>:輸入同一個姓名重新送出即可覆蓋舊資料(繳費狀態會保留)。</div>
+    <div class="small">填寫內容會在按「送出」時一次儲存;送出後,姓名、背號、尺寸等會登記到<b style="color:var(--ink)">全隊共用清單</b>(所有隊友可見)供背號查重與統計。<b style="color:var(--ink)">要修改</b>:輸入同一個姓名重新送出即可覆蓋舊資料(繳費狀態會保留)。</div>
   </section>
 
   <section class="card">
@@ -166,20 +176,28 @@ try{const d=JSON.parse(localStorage.getItem("aston_draft")||"null");
 }catch(e){items=[newItem()]}
 
 function newItem(){return{id:uid(),engName:"",number:"",size:"M",qty:1}}
-function addItem(){items.push(newItem());render();saveDraft()}
-function rmItem(id){items=items.filter(x=>x.id!==id);render();saveDraft()}
-function setItem(id,k,v){const it=items.find(x=>x.id===id);if(it){it[k]=v;render();saveDraft()}}
+function addItem(){items.push(newItem());render()}
+function rmItem(id){items=items.filter(x=>x.id!==id);render()}
+// 打字時只更新狀態與預覽,不重建輸入框(游標不會跳掉);資料於「送出」時一次儲存
+function setItem(id,k,v){const it=items.find(x=>x.id===id);if(it){it[k]=v;updateItemView(it);renderProblems()}}
+function updateItemView(it){
+  const taken=takenByOthers(),dupes=myDupes();
+  const conflict=it.number!==""&&taken[String(it.number)]!==undefined;
+  const bad=conflict||dupes.has(it.id);
+  const box=document.getElementById("item-"+it.id);
+  if(box)box.className="item"+(bad?" bad":"");
+  const w=document.getElementById("svg-"+it.id);
+  if(w)w.innerHTML=jerseySVG(it.engName,it.number,bad);
+  const c=document.getElementById("chest-"+it.id);
+  if(c)c.textContent='適合胸圍 '+CHEST[it.size]+'"';
+}
 
 function saveDraft(){
-  el("saveNote").textContent="儲存中…";clearTimeout(draftTimer);
-  draftTimer=setTimeout(()=>{
-    localStorage.setItem("aston_draft",JSON.stringify({
-      displayName:el("displayName").value,head:el("head").value,capQty:el("capQty").value,items,submittedAt}));
-    el("saveNote").textContent="已自動儲存 ✓";
-  },600);
+  localStorage.setItem("aston_draft",JSON.stringify({
+    displayName:el("displayName").value,head:el("head").value,capQty:el("capQty").value,items,submittedAt}));
 }
 document.addEventListener("input",e=>{
-  if(["displayName","head","capQty"].includes(e.target.id)){saveDraft();renderProblems();renderMineHint()}
+  if(["displayName","head","capQty"].includes(e.target.id)){renderProblems();renderMineHint()}
 });
 
 // ---------- team data ----------
@@ -205,7 +223,7 @@ function myDupes(){
   items.forEach(it=>{const n=String(it.number);if(it.number==="")return;
     if(seen[n]){d.add(it.id);d.add(seen[n])}else seen[n]=it.id});return d;
 }
-const nameBad=s=>s!==""&&!/^[A-Z][A-Z .'-]*$/.test(s);
+const nameBad=s=>false; // 背後姓名不限格式:英文大小寫、符號皆可
 
 // 用姓名載入自己之前的登記
 function renderMineHint(){
@@ -247,8 +265,7 @@ function problems(){
     if(it.number==="")p.push(t+":請填背號 (0–99)");
     else if(taken[String(it.number)]!==undefined)p.push(t+":背號 "+it.number+" 已被「"+taken[String(it.number)]+"」使用");
     if(dupes.has(it.id))p.push(t+":與自己另一件背號重複");
-    if(!it.engName.trim())p.push(t+":請填背後英文姓名");
-    else if(nameBad(it.engName))p.push(t+":姓名限大寫英文字母(可含空格、-、'、.)");
+    if(!it.engName.trim())p.push(t+":請填背後姓名");
     if(!it.qty||it.qty<1)p.push(t+":件數至少 1");
   });
   if(!apiReady())p.push("尚未設定後端 API 網址(請管理者處理)");
@@ -271,28 +288,30 @@ function jerseySVG(name,num,bad){
 }
 
 function render(){
+  // 若使用者正在明細輸入框打字,不重建 DOM(避免游標跳掉),只更新驗證與價格
+  if(document.activeElement&&document.activeElement.closest&&document.activeElement.closest("#items")){
+    renderProblems();return;
+  }
   const taken=takenByOthers(),dupes=myDupes(),jp=+settings.jerseyPrice||0;
   el("items").innerHTML=items.map((it,idx)=>{
     const conflict=it.number!==""&&taken[String(it.number)]!==undefined;
-    const selfDupe=dupes.has(it.id),nb=nameBad(it.engName);
-    return '<div class="item'+(conflict||selfDupe?' bad':'')+'">'
+    const selfDupe=dupes.has(it.id);
+    return '<div class="item'+(conflict||selfDupe?' bad':'')+'" id="item-'+it.id+'">'
     +'<div style="flex:1 1 300px;min-width:260px">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span class="tag">JERSEY '+(idx+1)+'</span>'
     +(items.length>1?'<button class="ghost" onclick="rmItem(\''+it.id+'\')">移除</button>':'')+'</div>'
     +'<div class="row">'
-    +'<label style="flex:1 1 170px"><div class="lb">背後英文姓名(大寫)</div>'
-    +'<input value="'+it.engName+'" maxlength="16" placeholder="例:CHEN" style="'+(nb?'border-color:#FF5C5C':'')+'" oninput="setItem(\''+it.id+'\',\'engName\',this.value.toUpperCase())">'
-    +(nb?'<div class="hint" style="color:#FF5C5C">限大寫英文(可含空格、-、\'、.)</div>':'')+'</label>'
+    +'<label style="flex:1 1 170px"><div class="lb">背後姓名(英文大小寫、符號皆可)</div>'
+    +'<input value="'+String(it.engName).replace(/"/g,'&quot;')+'" maxlength="16" placeholder="例:Chen" oninput="setItem(\''+it.id+'\',\'engName\',this.value)"></label>'
     +'<label style="flex:0 1 110px"><div class="lb">背號 0–99</div>'
     +'<input value="'+it.number+'" type="number" min="0" max="99" placeholder="32" style="'+((conflict||selfDupe)?'border-color:#FF5C5C':'')+'" oninput="if(this.value===\'\'||(/^\\d{1,2}$/.test(this.value)&&+this.value<=99))setItem(\''+it.id+'\',\'number\',this.value);else this.value=\''+it.number+'\'">'
     +(conflict?'<div class="hint" style="color:#FF5C5C">⚠ 已被「'+taken[String(it.number)]+'」使用</div>':(selfDupe?'<div class="hint" style="color:#FFB020">⚠ 與自己另一件重複</div>':''))+'</label>'
     +'<label style="flex:0 1 110px"><div class="lb">尺寸</div>'
     +'<select onchange="setItem(\''+it.id+'\',\'size\',this.value)">'+SIZES.map(s=>'<option'+(s===it.size?' selected':'')+'>'+s+'</option>').join('')+'</select>'
-    +'<div class="hint" style="color:var(--dim)">適合胸圍 '+CHEST[it.size]+'"</div></label>'
+    +'<div class="hint" style="color:var(--dim)" id="chest-'+it.id+'">適合胸圍 '+CHEST[it.size]+'"</div></label>'
     +'<label style="flex:0 1 90px"><div class="lb">件數</div>'
-    +'<input type="number" min="1" max="9" value="'+it.qty+'" oninput="setItem(\''+it.id+'\',\'qty\',Math.max(1,Math.min(9,+this.value||1)))">'
-    +(jp>0?'<div class="hint" style="color:var(--dim)">小計 NT$'+((+it.qty||0)*jp).toLocaleString()+'</div>':'')+'</label>'
-    +'</div></div>'+jerseySVG(it.engName,it.number,conflict||selfDupe)+'</div>';
+    +'<input type="number" min="1" max="9" value="'+it.qty+'" oninput="setItem(\''+it.id+'\',\'qty\',Math.max(1,Math.min(9,+this.value||1)))"></label>'
+    +'</div></div><span id="svg-'+it.id+'" style="display:contents">'+jerseySVG(it.engName,it.number,conflict||selfDupe)+'</span></div>';
   }).join('');
   renderProblems();renderMineHint();
 }
