@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<base target="_top">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ASTON 新球衣登記表</title>
@@ -32,9 +31,9 @@ input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 0 2px rgba(34,1
 .submit{width:100%;padding:13px 0;border-radius:12px;font-size:16px;font-weight:900;letter-spacing:2px;border:none;cursor:pointer;color:#0D0D11;background:linear-gradient(90deg,var(--teal),var(--pink))}
 .submit:disabled{background:#22222b;color:var(--dim);cursor:not-allowed}
 ul.problems{margin:0 0 12px;padding-left:18px;color:var(--warn);font-size:13px;line-height:1.8}
-.banner{margin-bottom:14px;padding:10px 14px;border-radius:10px;font-size:14px;display:none}
-.banner.ok{display:block;background:rgba(76,217,138,.1);border:1px solid rgba(76,217,138,.35);color:var(--ok)}
-.banner.err{display:block;background:rgba(255,92,92,.1);border:1px solid rgba(255,92,92,.35);color:var(--err)}
+.banner{margin-bottom:14px;padding:10px 14px;border-radius:10px;font-size:14px;display:none;position:sticky;top:8px;z-index:9}
+.banner.ok{display:block;background:rgba(76,217,138,.15);border:1px solid rgba(76,217,138,.35);color:var(--ok)}
+.banner.err{display:block;background:rgba(255,92,92,.15);border:1px solid rgba(255,92,92,.35);color:var(--err)}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
 .chip{padding:4px 10px;border-radius:8px;font-size:13px;font-weight:800;border:1px solid rgba(34,195,200,.4);color:var(--teal);background:#101017}
 .chip.mine{border-color:rgba(240,67,155,.5);color:var(--pink)}
@@ -42,6 +41,17 @@ table{width:100%;border-collapse:collapse;font-size:13px}
 th{padding:6px 8px;border-bottom:1px solid var(--edge);font-weight:600;color:var(--dim);text-align:left}
 td{padding:8px;border-bottom:1px solid var(--edge);vertical-align:top}
 .small{font-size:12px;color:var(--dim);line-height:1.7;margin-top:10px}
+img.photo{width:100%;border-radius:12px;display:block;border:1px solid var(--edge)}
+.linkBtn{display:inline-block;margin-top:4px;padding:9px 18px;border-radius:10px;border:1px solid rgba(34,195,200,.4);color:var(--teal);text-decoration:none;font-size:14px;font-weight:700;background:#101017}
+.price{margin:0 0 12px;padding:12px 14px;border-radius:10px;background:#101017;border:1px solid var(--edge);font-size:14px;line-height:1.9}
+.price b{color:var(--pink);font-size:18px}
+.paidTag{padding:2px 8px;border-radius:6px;font-size:12px;font-weight:700;white-space:nowrap}
+.paid-yes{background:rgba(76,217,138,.15);color:var(--ok)}
+.paid-no{background:rgba(255,176,32,.15);color:var(--warn)}
+.btn{padding:10px 18px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:linear-gradient(90deg,var(--teal),var(--pink));color:#0D0D11;font-size:14px}
+.btn2{padding:8px 14px;border-radius:10px;cursor:pointer;background:transparent;border:1px solid rgba(34,195,200,.4);color:var(--teal);font-weight:700;font-size:13px}
+input[type=checkbox]{width:18px;height:18px;accent-color:var(--pink);cursor:pointer}
+.adminRow{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px}
 @media (prefers-reduced-motion: reduce){*{transition:none!important}}
 </style>
 </head>
@@ -55,56 +65,106 @@ td{padding:8px;border-bottom:1px solid var(--edge);vertical-align:top}
   <div id="banner" class="banner"></div>
 
   <section class="card">
-    <div class="sec"><b><span class="no">01</span>基本資料</b><span class="note" id="saveNote"></span></div>
+    <div class="sec"><b><span class="no">00</span>本季裝備</b><span class="note">黑 × 桃紅 × 藍綠</span></div>
     <div class="row">
-      <label style="flex:1 1 220px"><div class="lb">姓名(中文,隊內對照用)</div>
-        <input id="displayName" maxlength="20" placeholder="例:陳大明"></label>
-      <label style="flex:0 1 160px"><div class="lb">頭圍 cm(訂球帽用)</div>
-        <input id="head" type="number" min="45" max="70" placeholder="例:58"></label>
+      <div style="flex:1 1 300px"><img class="photo" src="jersey.jpg" alt="ASTON 球衣（正面與背面）"></div>
+      <div style="flex:1 1 300px"><img class="photo" src="cap.jpg" alt="ASTON 球帽"></div>
+    </div>
+    <div style="text-align:center;margin-top:12px">
+      <a class="linkBtn" href="size-chart.jpg" target="_blank" rel="noopener">📏 二扣球衣尺寸對照表（點我開啟）</a>
     </div>
   </section>
 
   <section class="card">
-    <div class="sec"><b><span class="no">02</span>球衣明細</b><span class="note">同一人可買多件、各自指定背號與姓名</span></div>
+    <div class="sec"><b><span class="no">01</span>基本資料</b><span class="note" id="saveNote"></span></div>
+    <div class="row">
+      <label style="flex:1 1 200px"><div class="lb">姓名(中文,隊內對照用)</div>
+        <input id="displayName" maxlength="20" placeholder="例:陳大明"></label>
+      <label style="flex:0 1 140px"><div class="lb">頭圍 cm(訂球帽用)</div>
+        <input id="head" type="number" min="45" max="70" placeholder="例:58"></label>
+      <label style="flex:0 1 120px"><div class="lb">球帽件數 (0–9)</div>
+        <input id="capQty" type="number" min="0" max="9" value="1"></label>
+    </div>
+    <div id="mineHint" class="hint" style="color:var(--teal)"></div>
+  </section>
+
+  <section class="card">
+    <div class="sec"><b><span class="no">02</span>球衣明細</b><span class="note">同一人可買多件 ·
+      <a href="size-chart.jpg" target="_blank" rel="noopener" style="color:var(--teal)">尺寸表</a></span></div>
     <div id="items"></div>
     <button class="addBtn" onclick="addItem()">＋ 再加一件(不同背號 / 姓名)</button>
   </section>
 
   <section class="card">
-    <div class="sec"><b><span class="no">03</span>送出登記</b><span class="note" id="submitNote">尚未送出</span></div>
+    <div class="sec"><b><span class="no">03</span>計價與送出</b><span class="note" id="submitNote">尚未送出</span></div>
+    <div class="price" id="priceBox"></div>
     <ul class="problems" id="problems"></ul>
     <button class="submit" id="submitBtn" onclick="submitOrder()">送出我的訂單</button>
-    <div class="small">草稿會自動儲存在你這台裝置;按「送出」後,姓名、背號、尺寸等會登記到<b style="color:var(--ink)">全隊共用清單</b>(所有隊友可見)供背號查重與統計。</div>
+    <div class="small">草稿會自動儲存在你這台裝置;按「送出」後,姓名、背號、尺寸等會登記到<b style="color:var(--ink)">全隊共用清單</b>(所有隊友可見)供背號查重與統計。<b style="color:var(--ink)">要修改</b>:輸入同一個姓名重新送出即可覆蓋舊資料(繳費狀態會保留)。</div>
   </section>
 
   <section class="card">
     <div class="sec"><b><span class="no">04</span>全隊登記狀況</b><span class="note" id="teamNote">載入中…</span></div>
     <div class="chips" id="chips"></div>
     <div style="overflow-x:auto"><table id="teamTable" style="display:none">
-      <thead><tr><th>姓名</th><th>背號 / 英文名 / 尺寸 / 件數</th><th>頭圍</th></tr></thead>
+      <thead><tr><th>姓名</th><th>背號 / 英文名 / 尺寸 / 件數</th><th>頭圍・帽</th><th>金額</th><th>繳費</th></tr></thead>
       <tbody id="teamBody"></tbody>
     </table></div>
     <div id="teamEmpty" class="small">還沒有人送出。你可以當第一個。</div>
   </section>
+
+  <section class="card">
+    <div class="sec"><b><span class="no">05</span>管理者</b><span class="note">隊務專用</span></div>
+    <div id="adminLogin" class="row">
+      <input id="adminPwIn" type="password" placeholder="管理密碼" style="flex:1 1 180px" onkeydown="if(event.key==='Enter')adminLogin()">
+      <button class="btn" onclick="adminLogin()">進入管理</button>
+    </div>
+    <div id="adminPanel" style="display:none">
+      <div class="adminRow">
+        <label style="flex:0 1 140px"><div class="lb">球衣單價 NT$</div><input id="jerseyPriceIn" type="number" min="0"></label>
+        <label style="flex:0 1 140px"><div class="lb">球帽單價 NT$</div><input id="capPriceIn" type="number" min="0"></label>
+        <button class="btn2" onclick="savePrices()">儲存單價</button>
+      </div>
+      <div class="price" id="adminSummary"></div>
+      <label style="display:flex;gap:8px;align-items:center;margin-bottom:10px;font-size:14px">
+        <input type="checkbox" id="onlyUnpaid" onchange="onlyUnpaid=this.checked;renderAdmin()">只顯示未繳費訂單
+      </label>
+      <div style="overflow-x:auto"><table>
+        <thead><tr><th>姓名</th><th>明細</th><th>金額</th><th>已繳費</th></tr></thead>
+        <tbody id="adminBody"></tbody>
+      </table></div>
+    </div>
+  </section>
 </main>
 
 <script>
+// ★ 部署 Apps Script 後,把「網頁應用程式網址」貼在下面(https://script.google.com/macros/s/…/exec)
+const API_URL="https://script.google.com/macros/s/AKfycbwTxIcrepS7Hezpga7aOSt8g4vWoeaGGGeY9DBbpm4L2kC5pdUl9d0UOKXMDa-eR2ZE/exec";
+
 const SIZES=["XXS","XS","S","M","L","O","XO","XO2","XO3","XO4","XO5"];
 const CHEST={XXS:30,XS:32,S:34,M:36,L:38,O:40,XO:42,XO2:44,XO3:46,XO4:48,XO5:50};
 const uid=()=>Math.random().toString(36).slice(2,10);
-let personId=localStorage.getItem("aston_pid")||(uid()+uid());
-localStorage.setItem("aston_pid",personId);
-let items=[],teamOrders=[],submittedAt=null,draftTimer=null;
+const norm=s=>String(s||"").trim();
+let items=[],teamOrders=[],settings={jerseyPrice:0,capPrice:0};
+let submittedAt=null,draftTimer=null,adminPw=null,onlyUnpaid=false;
+
+function el(id){return document.getElementById(id)}
+const myName=()=>norm(el("displayName").value);
+const myKey=()=>myName().toLowerCase();
+
+// ---------- API ----------
+const apiReady=()=>/^https:\/\//.test(API_URL);
+async function apiGet(){const r=await fetch(API_URL+"?action=all");return r.json()}
+async function apiPost(b){const r=await fetch(API_URL,{method:"POST",body:JSON.stringify(b)});return r.json()}
 
 // ---------- draft ----------
 try{const d=JSON.parse(localStorage.getItem("aston_draft")||"null");
-  if(d){document.addEventListener("DOMContentLoaded",()=>{
-    el("displayName").value=d.displayName||"";el("head").value=d.head||"";
-    items=(d.items&&d.items.length)?d.items:[newItem()];submittedAt=d.submittedAt||null;render();});
-  }else{items=[newItem()];}
-}catch(e){items=[newItem()];}
+  if(d){el("displayName").value=d.displayName||"";el("head").value=d.head||"";
+    el("capQty").value=(d.capQty===undefined||d.capQty==="")?1:d.capQty;
+    items=(d.items&&d.items.length)?d.items:[newItem()];submittedAt=d.submittedAt||null;}
+  else items=[newItem()];
+}catch(e){items=[newItem()]}
 
-function el(id){return document.getElementById(id)}
 function newItem(){return{id:uid(),engName:"",number:"",size:"M",qty:1}}
 function addItem(){items.push(newItem());render();saveDraft()}
 function rmItem(id){items=items.filter(x=>x.id!==id);render();saveDraft()}
@@ -114,23 +174,31 @@ function saveDraft(){
   el("saveNote").textContent="儲存中…";clearTimeout(draftTimer);
   draftTimer=setTimeout(()=>{
     localStorage.setItem("aston_draft",JSON.stringify({
-      displayName:el("displayName").value,head:el("head").value,items,submittedAt}));
+      displayName:el("displayName").value,head:el("head").value,capQty:el("capQty").value,items,submittedAt}));
     el("saveNote").textContent="已自動儲存 ✓";
   },600);
 }
-document.addEventListener("input",e=>{if(e.target.id==="displayName"||e.target.id==="head"){saveDraft();renderProblems()}});
+document.addEventListener("input",e=>{
+  if(["displayName","head","capQty"].includes(e.target.id)){saveDraft();renderProblems();renderMineHint()}
+});
 
 // ---------- team data ----------
-function loadTeam(){
-  google.script.run.withSuccessHandler(s=>{
-    teamOrders=JSON.parse(s);renderTeam();render();
-  }).getOrders();
+async function loadTeam(){
+  if(!apiReady()){el("teamNote").textContent="尚未設定 API 網址";return}
+  try{
+    const d=await apiGet();
+    if(d.ok){teamOrders=d.orders||[];settings=d.settings||settings;renderTeam();render();renderAdmin()}
+  }catch(e){el("teamNote").textContent="連線失敗,稍後自動重試"}
 }
-setInterval(loadTeam,20000); // 每20秒同步一次,他人剛登記的背號也會示警
-document.addEventListener("DOMContentLoaded",loadTeam);
+setInterval(loadTeam,20000);
+loadTeam();
 
+const findMine=()=>teamOrders.find(o=>norm(o.displayName).toLowerCase()===myKey());
 function takenByOthers(){
-  const m={};teamOrders.forEach(o=>{if(o.personId!==personId)(o.items||[]).forEach(it=>m[String(it.number)]=o.displayName)});return m;
+  const m={};teamOrders.forEach(o=>{
+    if(norm(o.displayName).toLowerCase()!==myKey())
+      (o.items||[]).forEach(it=>m[String(it.number)]=o.displayName)});
+  return m;
 }
 function myDupes(){
   const seen={},d=new Set();
@@ -139,12 +207,42 @@ function myDupes(){
 }
 const nameBad=s=>s!==""&&!/^[A-Z][A-Z .'-]*$/.test(s);
 
+// 用姓名載入自己之前的登記
+function renderMineHint(){
+  const o=findMine();
+  el("mineHint").innerHTML=(o&&myName())
+    ?'找到「'+o.displayName+'」已送出的登記 → <button class="btn2" onclick="loadMine()">載入並修改</button>':'';
+}
+function loadMine(){
+  const o=findMine();if(!o)return;
+  el("head").value=o.head||"";el("capQty").value=o.capQty;
+  items=(o.items||[]).map(it=>({id:uid(),engName:it.engName,number:String(it.number),size:it.size,qty:+it.qty||1}));
+  submittedAt=o.updatedAt;render();saveDraft();
+  banner("ok","已載入你之前的登記,修改後按「更新我的訂單」即可覆蓋");
+}
+
+// ---------- pricing ----------
+const jerseyCount=()=>items.reduce((s,it)=>s+(+it.qty||0),0);
+const capCount=()=>{const v=+el("capQty").value;return isNaN(v)?0:v};
+const orderAmount=o=>((o.items||[]).reduce((s,it)=>s+(+it.qty||0),0))*(+settings.jerseyPrice||0)+(+o.capQty||0)*(+settings.capPrice||0);
+function renderPrice(){
+  const jc=jerseyCount(),cq=capCount(),jp=+settings.jerseyPrice||0,cp=+settings.capPrice||0;
+  const mine=findMine();
+  el("priceBox").innerHTML=
+    '球衣 '+jc+' 件 × NT$'+jp.toLocaleString()+'　＋　球帽 '+cq+' 頂 × NT$'+cp.toLocaleString()
+    +'　＝　<b>NT$'+(jc*jp+cq*cp).toLocaleString()+'</b>'
+    +(mine?'　<span class="paidTag '+(mine.paid?'paid-yes">已繳費':'paid-no">未繳費')+'</span>':'')
+    +((jp===0&&cp===0)?'<div class="hint" style="color:var(--warn)">單價尚未由管理者設定,金額僅供參考</div>':'');
+}
+
 // ---------- validation ----------
 function problems(){
   const p=[],taken=takenByOthers(),dupes=myDupes();
-  if(!el("displayName").value.trim())p.push("請填寫姓名(供隊內對照)");
-  const h=Number(el("head").value);
-  if(!h||h<45||h>70)p.push("請填寫頭圍(45–70 cm,訂帽用)");
+  if(!myName())p.push("請填寫姓名(供隊內對照)");
+  const cq=capCount();
+  if(!(cq>=0&&cq<=9&&Number.isInteger(cq)))p.push("球帽件數需為 0–9");
+  if(cq>0){const h=Number(el("head").value);
+    if(!h||h<45||h>70)p.push("請填寫頭圍(45–70 cm,訂帽用)")}
   items.forEach((it,i)=>{const t="第 "+(i+1)+" 件";
     if(it.number==="")p.push(t+":請填背號 (0–99)");
     else if(taken[String(it.number)]!==undefined)p.push(t+":背號 "+it.number+" 已被「"+taken[String(it.number)]+"」使用");
@@ -153,6 +251,7 @@ function problems(){
     else if(nameBad(it.engName))p.push(t+":姓名限大寫英文字母(可含空格、-、'、.)");
     if(!it.qty||it.qty<1)p.push(t+":件數至少 1");
   });
+  if(!apiReady())p.push("尚未設定後端 API 網址(請管理者處理)");
   return p;
 }
 
@@ -172,7 +271,7 @@ function jerseySVG(name,num,bad){
 }
 
 function render(){
-  const taken=takenByOthers(),dupes=myDupes();
+  const taken=takenByOthers(),dupes=myDupes(),jp=+settings.jerseyPrice||0;
   el("items").innerHTML=items.map((it,idx)=>{
     const conflict=it.number!==""&&taken[String(it.number)]!==undefined;
     const selfDupe=dupes.has(it.id),nb=nameBad(it.engName);
@@ -191,47 +290,96 @@ function render(){
     +'<select onchange="setItem(\''+it.id+'\',\'size\',this.value)">'+SIZES.map(s=>'<option'+(s===it.size?' selected':'')+'>'+s+'</option>').join('')+'</select>'
     +'<div class="hint" style="color:var(--dim)">適合胸圍 '+CHEST[it.size]+'"</div></label>'
     +'<label style="flex:0 1 90px"><div class="lb">件數</div>'
-    +'<input type="number" min="1" max="9" value="'+it.qty+'" oninput="setItem(\''+it.id+'\',\'qty\',Math.max(1,Math.min(9,+this.value||1)))"></label>'
+    +'<input type="number" min="1" max="9" value="'+it.qty+'" oninput="setItem(\''+it.id+'\',\'qty\',Math.max(1,Math.min(9,+this.value||1)))">'
+    +(jp>0?'<div class="hint" style="color:var(--dim)">小計 NT$'+((+it.qty||0)*jp).toLocaleString()+'</div>':'')+'</label>'
     +'</div></div>'+jerseySVG(it.engName,it.number,conflict||selfDupe)+'</div>';
   }).join('');
-  renderProblems();
+  renderProblems();renderMineHint();
 }
 function renderProblems(){
   const p=problems();
   el("problems").innerHTML=p.map(x=>'<li>'+x+'</li>').join('');
   el("submitBtn").disabled=p.length>0;
-  el("submitBtn").textContent=submittedAt?"更新我的訂單":"送出我的訂單";
+  el("submitBtn").textContent=(submittedAt||findMine())?"更新我的訂單":"送出我的訂單";
   el("submitNote").textContent=submittedAt?("上次送出:"+new Date(submittedAt).toLocaleString()):"尚未送出";
+  renderPrice();
 }
 function renderTeam(){
   const total=teamOrders.reduce((s,o)=>s+(o.items||[]).reduce((a,b)=>a+(+b.qty||0),0),0);
-  el("teamNote").textContent=teamOrders.length+" 人已填 · 共 "+total+" 件";
-  const chips=teamOrders.flatMap(o=>(o.items||[]).map(it=>({n:it.number,mine:o.personId===personId})))
+  const caps=teamOrders.reduce((s,o)=>s+(+o.capQty||0),0);
+  el("teamNote").textContent=teamOrders.length+" 人已填 · 球衣 "+total+" 件 · 球帽 "+caps+" 頂";
+  const mk=myKey();
+  el("chips").innerHTML=teamOrders.flatMap(o=>(o.items||[]).map(it=>({n:it.number,mine:norm(o.displayName).toLowerCase()===mk})))
     .sort((a,b)=>a.n-b.n).map(x=>'<span class="chip'+(x.mine?' mine':'')+'">#'+x.n+'</span>').join('');
-  el("chips").innerHTML=chips;
   if(teamOrders.length){
     el("teamEmpty").style.display="none";el("teamTable").style.display="table";
     el("teamBody").innerHTML=[...teamOrders].sort((a,b)=>a.updatedAt<b.updatedAt?1:-1).map(o=>
-      '<tr><td style="white-space:nowrap">'+o.displayName+(o.personId===personId?'<span style="color:var(--pink)">(我)</span>':'')+'</td>'
+      '<tr><td style="white-space:nowrap">'+o.displayName+(norm(o.displayName).toLowerCase()===mk?'<span style="color:var(--pink)">(我)</span>':'')+'</td>'
       +'<td style="line-height:1.9">'+(o.items||[]).map(it=>'<div><b style="color:var(--teal)">#'+it.number+'</b> '+it.engName+'<span style="color:var(--dim)"> · '+it.size+' · '+it.qty+' 件</span></div>').join('')+'</td>'
-      +'<td style="color:var(--dim)">'+o.head+' cm</td></tr>').join('');
+      +'<td style="color:var(--dim);white-space:nowrap">'+(o.head?o.head+' cm':'—')+' × '+(+o.capQty||0)+'</td>'
+      +'<td style="white-space:nowrap">NT$'+orderAmount(o).toLocaleString()+'</td>'
+      +'<td><span class="paidTag '+(o.paid?'paid-yes">已繳':'paid-no">未繳')+'</span></td></tr>').join('');
   }else{el("teamEmpty").style.display="block";el("teamTable").style.display="none"}
 }
 
 // ---------- submit ----------
 function banner(kind,text){const b=el("banner");b.className="banner "+kind;b.textContent=text;setTimeout(()=>b.className="banner",4000)}
-function submitOrder(){
+async function submitOrder(){
   if(problems().length)return;
   const btn=el("submitBtn");btn.disabled=true;btn.textContent="送出中…";
-  const payload=JSON.stringify({personId,displayName:el("displayName").value.trim(),head:Number(el("head").value),
-    items:items.map(it=>({engName:it.engName.trim(),number:String(it.number),size:it.size,qty:Number(it.qty)}))});
-  google.script.run.withSuccessHandler(s=>{
-    const r=JSON.parse(s);
-    if(r.ok){submittedAt=new Date().toISOString();banner("ok","已送出!你的背號已登記,隊友將看到即時查重");saveDraft();loadTeam()}
-    else{banner("err",r.msg||"送出失敗");loadTeam()}
-    renderProblems();
-  }).withFailureHandler(()=>{banner("err","連線失敗,請再試一次");renderProblems()}).submitOrder(payload);
+  try{
+    const r=await apiPost({action:"submit",order:{
+      displayName:myName(),head:Number(el("head").value)||0,capQty:capCount(),
+      items:items.map(it=>({engName:it.engName.trim(),number:String(it.number),size:it.size,qty:Number(it.qty)}))}});
+    if(r.ok){submittedAt=new Date().toISOString();banner("ok","已送出!你的背號已登記,隊友將看到即時查重");saveDraft();await loadTeam()}
+    else{banner("err",r.msg||"送出失敗");await loadTeam()}
+  }catch(e){banner("err","連線失敗,請再試一次")}
+  renderProblems();
 }
+
+// ---------- admin ----------
+async function adminLogin(){
+  if(!apiReady()){banner("err","尚未設定 API 網址");return}
+  const pw=el("adminPwIn").value;
+  try{
+    const r=await apiPost({action:"verify",pw});
+    if(r.ok){adminPw=pw;el("adminLogin").style.display="none";el("adminPanel").style.display="block";
+      el("jerseyPriceIn").value=settings.jerseyPrice;el("capPriceIn").value=settings.capPrice;renderAdmin()}
+    else banner("err","密碼錯誤");
+  }catch(e){banner("err","連線失敗,請再試一次")}
+}
+async function savePrices(){
+  try{
+    const r=await apiPost({action:"setPrices",pw:adminPw,
+      jerseyPrice:Number(el("jerseyPriceIn").value)||0,capPrice:Number(el("capPriceIn").value)||0});
+    if(r.ok){banner("ok","單價已更新");await loadTeam()}else banner("err",r.msg||"儲存失敗");
+  }catch(e){banner("err","連線失敗,請再試一次")}
+}
+async function setPaid(name,paid){
+  try{
+    const r=await apiPost({action:"setPaid",pw:adminPw,displayName:name,paid});
+    if(r.ok){banner("ok","「"+name+"」繳費狀態已更新");await loadTeam()}
+    else{banner("err",r.msg||"更新失敗");renderAdmin()}
+  }catch(e){banner("err","連線失敗,請再試一次");renderAdmin()}
+}
+function renderAdmin(){
+  if(!adminPw)return;
+  const paidSum=teamOrders.filter(o=>o.paid).reduce((s,o)=>s+orderAmount(o),0);
+  const unpaid=teamOrders.filter(o=>!o.paid);
+  const unpaidSum=unpaid.reduce((s,o)=>s+orderAmount(o),0);
+  el("adminSummary").innerHTML='已收 <b>NT$'+paidSum.toLocaleString()+'</b>　｜　未收 <b>NT$'+unpaidSum.toLocaleString()+'</b>'
+    +(unpaid.length?'<div class="hint" style="color:var(--warn)">未繳費('+unpaid.length+'人):'+unpaid.map(o=>o.displayName).join('、')+'</div>'
+      :'<div class="hint" style="color:var(--ok)">全員已繳費 ✓</div>');
+  const list=(onlyUnpaid?unpaid:teamOrders);
+  el("adminBody").innerHTML=list.map(o=>{
+    const safe=o.displayName.replace(/\\/g,"\\\\").replace(/'/g,"\\'");
+    return '<tr><td style="white-space:nowrap">'+o.displayName+'</td>'
+    +'<td style="line-height:1.8;color:var(--dim)">球衣 '+(o.items||[]).reduce((s,it)=>s+(+it.qty||0),0)+' 件 · 球帽 '+(+o.capQty||0)+' 頂</td>'
+    +'<td style="white-space:nowrap">NT$'+orderAmount(o).toLocaleString()+'</td>'
+    +'<td><input type="checkbox" '+(o.paid?'checked':'')+' onchange="setPaid(\''+safe+'\',this.checked)"></td></tr>';
+  }).join('')||'<tr><td colspan="4" style="color:var(--dim)">沒有符合的訂單</td></tr>';
+}
+
 render();
 </script>
 </body>
