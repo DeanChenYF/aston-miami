@@ -90,10 +90,6 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--pink);cursor:poin
     <div class="row">
       <label style="flex:1 1 200px"><div class="lb">姓名(中文,隊內對照用)</div>
         <input id="displayName" maxlength="20" placeholder="例:陳大明"></label>
-      <label style="flex:0 1 140px"><div class="lb">頭圍 cm(訂球帽用)</div>
-        <input id="head" type="number" min="45" max="70" placeholder="例:58"></label>
-      <label style="flex:0 1 120px"><div class="lb">球帽件數 (0–9)</div>
-        <input id="capQty" type="number" min="0" max="9" value="1"></label>
     </div>
     <div id="mineHint" class="hint" style="color:var(--teal)"></div>
   </section>
@@ -106,7 +102,13 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--pink);cursor:poin
   </section>
 
   <section class="card">
-    <div class="sec"><b><span class="no">03</span>計價與送出</b><span class="note" id="submitNote">尚未送出</span></div>
+    <div class="sec"><b><span class="no">03</span>球帽明細</b><span class="note">每頂各自填頭圍,帽子背號選填(自動帶入球衣背號,可修改)</span></div>
+    <div id="caps"></div>
+    <button class="addBtn" onclick="addCap()">＋ 再加一頂球帽</button>
+  </section>
+
+  <section class="card">
+    <div class="sec"><b><span class="no">04</span>計價與送出</b><span class="note" id="submitNote">尚未送出</span></div>
     <div class="price" id="priceBox"></div>
     <ul class="problems" id="problems"></ul>
     <button class="submit" id="submitBtn" onclick="submitOrder()">送出我的訂單</button>
@@ -114,17 +116,17 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--pink);cursor:poin
   </section>
 
   <section class="card">
-    <div class="sec"><b><span class="no">04</span>全隊登記狀況</b><span class="note" id="teamNote">載入中…</span></div>
+    <div class="sec"><b><span class="no">05</span>全隊登記狀況</b><span class="note" id="teamNote">載入中…</span></div>
     <div class="chips" id="chips"></div>
     <div style="overflow-x:auto"><table id="teamTable" style="display:none">
-      <thead><tr><th>姓名</th><th>背號 / 英文名 / 尺寸 / 件數</th><th>頭圍・帽</th><th>金額</th><th>繳費</th></tr></thead>
+      <thead><tr><th>姓名</th><th>背號 / 英文名 / 尺寸 / 件數</th><th>球帽(頭圍 #背號)</th><th>金額</th><th>繳費</th></tr></thead>
       <tbody id="teamBody"></tbody>
     </table></div>
     <div id="teamEmpty" class="small">還沒有人送出。你可以當第一個。</div>
   </section>
 
   <section class="card">
-    <div class="sec"><b><span class="no">05</span>管理者</b><span class="note">隊務專用</span></div>
+    <div class="sec"><b><span class="no">06</span>管理者</b><span class="note">隊務專用</span></div>
     <div id="adminLogin" class="row">
       <input id="adminPwIn" type="password" placeholder="管理密碼" style="flex:1 1 180px" onkeydown="if(event.key==='Enter')adminLogin()">
       <button class="btn" onclick="adminLogin()">進入管理</button>
@@ -156,7 +158,7 @@ const SIZES=["XXS","XS","S","M","L","O","XO","XO2","XO3","XO4","XO5"];
 const CHEST={XXS:30,XS:32,S:34,M:36,L:38,O:40,XO:42,XO2:44,XO3:46,XO4:48,XO5:50};
 const uid=()=>Math.random().toString(36).slice(2,10);
 const norm=s=>String(s||"").trim();
-let items=[],teamOrders=[],settings={jerseyPrice:0,capPrice:0};
+let items=[],caps=[],teamOrders=[],settings={jerseyPrice:0,capPrice:0};
 let submittedAt=null,draftTimer=null,adminPw=null,onlyUnpaid=false;
 
 function el(id){return document.getElementById(id)}
@@ -170,11 +172,13 @@ async function apiPost(b){const r=await fetch(API_URL,{method:"POST",body:JSON.s
 
 // ---------- draft ----------
 try{const d=JSON.parse(localStorage.getItem("aston_draft")||"null");
-  if(d){el("displayName").value=d.displayName||"";el("head").value=d.head||"";
-    el("capQty").value=(d.capQty===undefined||d.capQty==="")?1:d.capQty;
-    items=(d.items&&d.items.length)?d.items:[newItem()];submittedAt=d.submittedAt||null;}
-  else items=[newItem()];
-}catch(e){items=[newItem()]}
+  if(d){el("displayName").value=d.displayName||"";
+    items=(d.items&&d.items.length)?d.items:[newItem()];
+    if(Array.isArray(d.caps))caps=d.caps.map(c=>({id:uid(),head:String(c.head??""),number:String(c.number??"")}));
+    else{const q=Number(d.capQty)||0;for(let k=0;k<q;k++)caps.push({id:uid(),head:String(d.head||""),number:String((d.items&&d.items[k]&&d.items[k].number)||(d.items&&d.items[0]&&d.items[0].number)||"")})}
+    submittedAt=d.submittedAt||null;}
+  else{items=[newItem()];caps=[newCap()];}
+}catch(e){items=[newItem()];if(!caps.length)caps=[newCap()]}
 
 function newItem(){return{id:uid(),engName:"",number:"",size:"M",qty:1}}
 function addItem(){items.push(newItem());render()}
@@ -195,11 +199,32 @@ function updateItemView(it){
 
 function saveDraft(){
   localStorage.setItem("aston_draft",JSON.stringify({
-    displayName:el("displayName").value,head:el("head").value,capQty:el("capQty").value,items,submittedAt}));
+    displayName:el("displayName").value,items,caps:caps.map(c=>({head:c.head,number:c.number})),submittedAt}));
 }
 document.addEventListener("input",e=>{
-  if(["displayName","head","capQty"].includes(e.target.id)){renderProblems();renderMineHint()}
+  if(e.target.id==="displayName"){renderProblems();renderMineHint()}
 });
+
+// ---------- 球帽明細 ----------
+function newCap(){return{id:uid(),head:"",number:String((items[caps.length]&&items[caps.length].number)||(items[0]&&items[0].number)||"")}}
+function addCap(){caps.push(newCap());renderCaps();renderProblems()}
+function rmCap(id){caps=caps.filter(x=>x.id!==id);renderCaps();renderProblems()}
+function setCap(id,k,v){const c=caps.find(x=>x.id===id);if(c){c[k]=v;renderProblems()}}
+function renderCaps(){
+  if(document.activeElement&&document.activeElement.closest&&document.activeElement.closest("#caps")){renderProblems();return}
+  el("caps").innerHTML=caps.length?caps.map((c,idx)=>
+    '<div class="item" id="cap-'+c.id+'">'
+    +'<div style="flex:1 1 300px;min-width:260px">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span class="tag">CAP '+(idx+1)+'</span>'
+    +'<button class="ghost" onclick="rmCap(\''+c.id+'\')">移除</button></div>'
+    +'<div class="row">'
+    +'<label style="flex:0 1 150px"><div class="lb">頭圍 cm (45–70)</div>'
+    +'<input value="'+c.head+'" type="number" min="45" max="70" placeholder="例:58" oninput="setCap(\''+c.id+'\',\'head\',this.value)"></label>'
+    +'<label style="flex:0 1 150px"><div class="lb">帽子背號(選填,不查重)</div>'
+    +'<input value="'+String(c.number).replace(/"/g,'&quot;')+'" maxlength="4" placeholder="同球衣背號" oninput="setCap(\''+c.id+'\',\'number\',this.value)"></label>'
+    +'</div></div></div>').join('')
+  :'<div class="small">不買球帽可留空,直接送出即可。</div>';
+}
 
 // ---------- team data ----------
 async function loadTeam(){
@@ -234,7 +259,7 @@ function renderMineHint(){
 }
 function loadMine(){
   const o=findMine();if(!o)return;
-  el("head").value=o.head||"";el("capQty").value=o.capQty;
+  caps=(o.caps||[]).map(c=>({id:uid(),head:String(c.head||""),number:String(c.number||"")}));
   items=(o.items||[]).map(it=>({id:uid(),engName:it.engName,number:String(it.number),size:it.size,qty:+it.qty||1}));
   submittedAt=o.updatedAt;render();saveDraft();
   banner("ok","已載入你之前的登記,修改後按「更新我的訂單」即可覆蓋");
@@ -242,7 +267,7 @@ function loadMine(){
 
 // ---------- pricing ----------
 const jerseyCount=()=>items.reduce((s,it)=>s+(+it.qty||0),0);
-const capCount=()=>{const v=+el("capQty").value;return isNaN(v)?0:v};
+const capCount=()=>caps.length;
 const orderAmount=o=>((o.items||[]).reduce((s,it)=>s+(+it.qty||0),0))*(+settings.jerseyPrice||0)+(+o.capQty||0)*(+settings.capPrice||0);
 function renderPrice(){
   const jc=jerseyCount(),cq=capCount(),jp=+settings.jerseyPrice||0,cp=+settings.capPrice||0;
@@ -258,10 +283,9 @@ function renderPrice(){
 function problems(){
   const p=[],taken=takenByOthers(),dupes=myDupes();
   if(!myName())p.push("請填寫姓名(供隊內對照)");
-  const cq=capCount();
-  if(!(cq>=0&&cq<=9&&Number.isInteger(cq)))p.push("球帽件數需為 0–9");
-  if(cq>0){const h=Number(el("head").value);
-    if(!h||h<45||h>70)p.push("請填寫頭圍(45–70 cm,訂帽用)")}
+  if(caps.length>9)p.push("球帽最多 9 頂");
+  caps.forEach((c,i)=>{const h=Number(c.head);
+    if(!h||h<45||h>70)p.push("球帽 "+(i+1)+":請填頭圍(45–70 cm)")});
   items.forEach((it,i)=>{const t="第 "+(i+1)+" 件";
     if(it.number==="")p.push(t+":請填背號 (1–99)");
     else if(!adminPw&&RESERVED.includes(String(it.number)))p.push(t+":背號 "+it.number+" 為保留背號(僅管理員可登記)");
@@ -316,7 +340,7 @@ function render(){
     +'<input type="number" min="1" max="9" value="'+it.qty+'" oninput="setItem(\''+it.id+'\',\'qty\',Math.max(1,Math.min(9,+this.value||1)))"></label>'
     +'</div></div><span id="svg-'+it.id+'" style="display:contents">'+jerseySVG(it.engName,it.number,conflict||selfDupe)+'</span></div>';
   }).join('');
-  renderProblems();renderMineHint();
+  renderCaps();renderProblems();renderMineHint();
 }
 function renderProblems(){
   const p=problems();
@@ -328,8 +352,8 @@ function renderProblems(){
 }
 function renderTeam(){
   const total=teamOrders.reduce((s,o)=>s+(o.items||[]).reduce((a,b)=>a+(+b.qty||0),0),0);
-  const caps=teamOrders.reduce((s,o)=>s+(+o.capQty||0),0);
-  el("teamNote").textContent=teamOrders.length+" 人已填 · 球衣 "+total+" 件 · 球帽 "+caps+" 頂";
+  const capsTotal=teamOrders.reduce((s,o)=>s+(+o.capQty||0),0);
+  el("teamNote").textContent=teamOrders.length+" 人已填 · 球衣 "+total+" 件 · 球帽 "+capsTotal+" 頂";
   const mk=myKey();
   el("chips").innerHTML=teamOrders.flatMap(o=>(o.items||[]).map(it=>({n:it.number,mine:norm(o.displayName).toLowerCase()===mk})))
     .sort((a,b)=>a.n-b.n).map(x=>'<span class="chip'+(x.mine?' mine':'')+'">#'+x.n+'</span>').join('');
@@ -338,7 +362,7 @@ function renderTeam(){
     el("teamBody").innerHTML=[...teamOrders].sort((a,b)=>a.updatedAt<b.updatedAt?1:-1).map(o=>
       '<tr><td style="white-space:nowrap">'+o.displayName+(norm(o.displayName).toLowerCase()===mk?'<span style="color:var(--pink)">(我)</span>':'')+'</td>'
       +'<td style="line-height:1.9">'+(o.items||[]).map(it=>'<div><b style="color:var(--teal)">#'+it.number+'</b> '+it.engName+'<span style="color:var(--dim)"> · '+it.size+' · '+it.qty+' 件</span></div>').join('')+'</td>'
-      +'<td style="color:var(--dim);white-space:nowrap">'+(o.head?o.head+' cm':'—')+' × '+(+o.capQty||0)+'</td>'
+      +'<td style="color:var(--dim);white-space:nowrap">'+((o.caps&&o.caps.length)?o.caps.map(c=>c.head+(c.number?' <span style="color:var(--teal)">#'+c.number+'</span>':'')).join('<br>'):'—')+'</td>'
       +'<td style="white-space:nowrap">NT$'+orderAmount(o).toLocaleString()+'</td>'
       +'<td><span class="paidTag '+(o.paid?'paid-yes">已繳':'paid-no">未繳')+'</span></td></tr>').join('');
   }else{el("teamEmpty").style.display="block";el("teamTable").style.display="none"}
@@ -351,7 +375,8 @@ async function submitOrder(){
   const btn=el("submitBtn");btn.disabled=true;btn.textContent="送出中…";
   try{
     const r=await apiPost({action:"submit",pw:adminPw,order:{
-      displayName:myName(),head:Number(el("head").value)||0,capQty:capCount(),
+      displayName:myName(),
+      caps:caps.map(c=>({head:Number(c.head)||0,number:String(c.number||"").trim()})),
       items:items.map(it=>({engName:it.engName.trim(),number:String(it.number),size:it.size,qty:Number(it.qty)}))}});
     if(r.ok){submittedAt=new Date().toISOString();banner("ok","已送出!你的背號已登記,隊友將看到即時查重");saveDraft();await loadTeam()}
     else{banner("err",r.msg||"送出失敗");await loadTeam()}
