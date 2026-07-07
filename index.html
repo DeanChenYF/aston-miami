@@ -151,6 +151,7 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--pink);cursor:poin
 // ★ 部署 Apps Script 後,把「網頁應用程式網址」貼在下面(https://script.google.com/macros/s/…/exec)
 const API_URL="https://script.google.com/macros/s/AKfycbwTxIcrepS7Hezpga7aOSt8g4vWoeaGGGeY9DBbpm4L2kC5pdUl9d0UOKXMDa-eR2ZE/exec";
 
+const RESERVED=["0","00","6"]; // 保留背號,不可登記
 const SIZES=["XXS","XS","S","M","L","O","XO","XO2","XO3","XO4","XO5"];
 const CHEST={XXS:30,XS:32,S:34,M:36,L:38,O:40,XO:42,XO2:44,XO3:46,XO4:48,XO5:50};
 const uid=()=>Math.random().toString(36).slice(2,10);
@@ -182,7 +183,7 @@ function rmItem(id){items=items.filter(x=>x.id!==id);render()}
 function setItem(id,k,v){const it=items.find(x=>x.id===id);if(it){it[k]=v;updateItemView(it);renderProblems()}}
 function updateItemView(it){
   const taken=takenByOthers(),dupes=myDupes();
-  const conflict=it.number!==""&&taken[String(it.number)]!==undefined;
+  const conflict=it.number!==""&&(taken[String(it.number)]!==undefined||RESERVED.includes(String(it.number)));
   const bad=conflict||dupes.has(it.id);
   const box=document.getElementById("item-"+it.id);
   if(box)box.className="item"+(bad?" bad":"");
@@ -262,7 +263,8 @@ function problems(){
   if(cq>0){const h=Number(el("head").value);
     if(!h||h<45||h>70)p.push("請填寫頭圍(45–70 cm,訂帽用)")}
   items.forEach((it,i)=>{const t="第 "+(i+1)+" 件";
-    if(it.number==="")p.push(t+":請填背號 (0–99)");
+    if(it.number==="")p.push(t+":請填背號 (1–99)");
+    else if(RESERVED.includes(String(it.number)))p.push(t+":背號 "+it.number+" 為保留背號,不可使用");
     else if(taken[String(it.number)]!==undefined)p.push(t+":背號 "+it.number+" 已被「"+taken[String(it.number)]+"」使用");
     if(dupes.has(it.id))p.push(t+":與自己另一件背號重複");
     if(!it.engName.trim())p.push(t+":請填背後姓名");
@@ -294,7 +296,8 @@ function render(){
   }
   const taken=takenByOthers(),dupes=myDupes(),jp=+settings.jerseyPrice||0;
   el("items").innerHTML=items.map((it,idx)=>{
-    const conflict=it.number!==""&&taken[String(it.number)]!==undefined;
+    const reserved=it.number!==""&&RESERVED.includes(String(it.number));
+    const conflict=it.number!==""&&(taken[String(it.number)]!==undefined||reserved);
     const selfDupe=dupes.has(it.id);
     return '<div class="item'+(conflict||selfDupe?' bad':'')+'" id="item-'+it.id+'">'
     +'<div style="flex:1 1 300px;min-width:260px">'
@@ -303,9 +306,9 @@ function render(){
     +'<div class="row">'
     +'<label style="flex:1 1 170px"><div class="lb">背後姓名(英文大小寫、符號皆可)</div>'
     +'<input value="'+String(it.engName).replace(/"/g,'&quot;')+'" maxlength="16" placeholder="例:Chen" oninput="setItem(\''+it.id+'\',\'engName\',this.value)"></label>'
-    +'<label style="flex:0 1 110px"><div class="lb">背號 0–99</div>'
+    +'<label style="flex:0 1 110px"><div class="lb">背號(0、00、6 保留)</div>'
     +'<input value="'+it.number+'" type="number" min="0" max="99" placeholder="32" style="'+((conflict||selfDupe)?'border-color:#FF5C5C':'')+'" oninput="if(this.value===\'\'||(/^\\d{1,2}$/.test(this.value)&&+this.value<=99))setItem(\''+it.id+'\',\'number\',this.value);else this.value=\''+it.number+'\'">'
-    +(conflict?'<div class="hint" style="color:#FF5C5C">⚠ 已被「'+taken[String(it.number)]+'」使用</div>':(selfDupe?'<div class="hint" style="color:#FFB020">⚠ 與自己另一件重複</div>':''))+'</label>'
+    +(reserved?'<div class="hint" style="color:#FF5C5C">⚠ 保留背號,不可使用</div>':(conflict?'<div class="hint" style="color:#FF5C5C">⚠ 已被「'+taken[String(it.number)]+'」使用</div>':(selfDupe?'<div class="hint" style="color:#FFB020">⚠ 與自己另一件重複</div>':'')))+'</label>'
     +'<label style="flex:0 1 110px"><div class="lb">尺寸</div>'
     +'<select onchange="setItem(\''+it.id+'\',\'size\',this.value)">'+SIZES.map(s=>'<option'+(s===it.size?' selected':'')+'>'+s+'</option>').join('')+'</select>'
     +'<div class="hint" style="color:var(--dim)" id="chest-'+it.id+'">適合胸圍 '+CHEST[it.size]+'"</div></label>'
