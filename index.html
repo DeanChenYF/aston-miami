@@ -70,6 +70,7 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--pink);cursor:poin
   <div class="eyebrow">ASTON · SINCE 2010</div>
   <h1>新球衣登記表</h1>
   <div class="sub">黑 × 桃紅 × 藍綠｜填寫尺寸・背號・頭圍・件數</div>
+  <div style="margin:14px auto 0;max-width:400px;padding:9px 16px;border-radius:10px;background:rgba(255,176,32,.12);border:1px solid rgba(255,176,32,.45);color:var(--warn);font-weight:800;letter-spacing:3px;font-size:15px">🔒 已結標｜目前僅開放檢視</div>
 </header>
 <main>
   <div id="banner" class="banner"></div>
@@ -153,6 +154,7 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--pink);cursor:poin
 // ★ 部署 Apps Script 後,把「網頁應用程式網址」貼在下面(https://script.google.com/macros/s/…/exec)
 const API_URL="https://script.google.com/macros/s/AKfycbwTxIcrepS7Hezpga7aOSt8g4vWoeaGGGeY9DBbpm4L2kC5pdUl9d0UOKXMDa-eR2ZE/exec";
 
+const CLOSED=true; // 已結標:僅開放檢視,只有管理員登入後可更新(要重新開放改成 false)
 const RESERVED=["0","00","6"]; // 保留背號,僅管理員登入後可登記
 const SIZES=["XXS","XS","S","M","L","O","XO","XO2","XO3","XO4","XO5"];
 const CHEST={XXS:30,XS:32,S:34,M:36,L:38,O:40,XO:42,XO2:44,XO3:46,XO4:48,XO5:50};
@@ -350,6 +352,7 @@ function renderProblems(){
   el("problems").innerHTML=p.map(x=>'<li>'+x+'</li>').join('');
   el("submitBtn").disabled=p.length>0;
   el("submitBtn").textContent=(submittedAt||findMine())?"更新我的訂單":"送出我的訂單";
+  if(CLOSED&&!adminPw){el("submitBtn").disabled=true;el("submitBtn").textContent="🔒 已結標(僅供檢視)"}
   el("submitNote").textContent=submittedAt?("上次送出:"+new Date(submittedAt).toLocaleString()):"尚未送出";
   renderPrice();
 }
@@ -375,6 +378,7 @@ function renderTeam(){
 function banner(kind,text){const b=el("banner");b.className="banner "+kind;b.textContent=text;setTimeout(()=>b.className="banner",4000)}
 async function submitOrder(){
   if(problems().length)return;
+  if(CLOSED&&!adminPw){banner("err","已結標,目前僅開放檢視;如需修改請洽管理員");return}
   const btn=el("submitBtn");btn.disabled=true;btn.textContent="送出中…";
   try{
     const r=await apiPost({action:"submit",pw:adminPw,order:{
